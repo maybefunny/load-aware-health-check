@@ -6,8 +6,9 @@ class Client:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(3)
             s.connect((addr, port))
-            s.sendall(b'Hello, world')
+            s.sendall(b'\x11')
             data = s.recv(1024)
 
         print('Received', repr(data))
+        print(myp2p.peers)
         

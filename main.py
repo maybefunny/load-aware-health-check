@@ -2,21 +2,18 @@ from mylib.constants import *
 from mylib.client import Client
 from mylib.server import Server
 
-peers = []
-data = []
-
 def main():
     # get superior peer address from user
     addr = input("superior peer address (None): ")
     if(addr != ''):
-        peers.append(addr)
+        myp2p.peers.append(addr)
     addr = input("listening address (0.0.0.0): ")
     if(addr == ''):
         addr = '0.0.0.0'
     host = addr
     
     # start server routine
-    Server()
+    Server(host, port)
 
     # connect to superior peer and start client routine
     retrieve()
@@ -24,9 +21,10 @@ def main():
 def retrieve():
     while True:
         try:
-            for peer in peers:
-                client = Client(peer)
-            time.sleep(1)
+            for peer in myp2p.peers:
+                if(peer != host):
+                    client = Client(peer)
+            time.sleep(3)
         except KeyboardInterrupt:
             sys.exit(0)
         except:

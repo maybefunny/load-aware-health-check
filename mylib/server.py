@@ -3,7 +3,8 @@ import selectors
 import types
 
 class Server:
-    def __init__(self) -> None:
+    def __init__(self, host, port) -> None:
+        self.host = host
         self.sel = selectors.DefaultSelector()
         # ...
         self.lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -20,6 +21,7 @@ class Server:
     def serve(self):
         while True:
             try:
+                print(myp2p.peers)
                 print('waiting for event')
                 events = self.sel.select(timeout=None)
                 for key, mask in events:
@@ -34,6 +36,9 @@ class Server:
     
     def accept_wrapper(self, sock):
         conn, addr = sock.accept()  # Should be ready to read
+        if(addr[0] == self.host):
+            return
+        myp2p.add_peer(addr[0])
         print('accepted connection from', addr)
         conn.setblocking(False)
         data = types.SimpleNamespace(addr=addr, inb=b'', outb=b'')

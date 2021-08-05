@@ -7,6 +7,7 @@ class Server:
         self.sel = selectors.DefaultSelector()
         # ...
         self.lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.lsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.lsock.bind((host, port))
         self.lsock.listen()
         print('listening on', (host, port))
@@ -14,15 +15,22 @@ class Server:
         self.sel.register(self.lsock, selectors.EVENT_READ, data=None)
 
         serve_thread = threading.Thread(target=self.serve, daemon=True)
+        serve_thread.start()
 
     def serve(self):
         while True:
-            events = self.sel.select(timeout=None)
-            for key, mask in events:
-                if key.data is None:
-                    self.accept_wrapper(key.fileobj)
-                else:
-                    self.service_connection(key, mask)
+            try:
+                print('waiting for event')
+                events = self.sel.select(timeout=None)
+                for key, mask in events:
+                    if key.data is None:
+                        self.accept_wrapper(key.fileobj)
+                    else:
+                        self.service_connection(key, mask)
+            except KeyboardInterrupt:
+                sys.exit(0)
+            except:
+                pass
     
     def accept_wrapper(self, sock):
         conn, addr = sock.accept()  # Should be ready to read

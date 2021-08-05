@@ -2,24 +2,38 @@ from mylib.constants import *
 from mylib.client import Client
 from mylib.server import Server
 
-peers = ['127.0.0.1']
+peers = []
 data = []
 
 def main():
     # get superior peer address from user
-    addr = input("superior peer address: ")
-    peers.append(addr)
-    # connect to superior peer and start client routine
-    while True:
-        for peer in peers:
-            try:
-                client = Client(peer)
-            except KeyboardInterrupt:
-                sys.exit(0)
-            except:
-                pass
-
+    addr = input("superior peer address (None): ")
+    if(addr != ''):
+        peers.append(addr)
+    addr = input("listening address (0.0.0.0): ")
+    if(addr == ''):
+        addr = '0.0.0.0'
+    host = addr
+    
     # start server routine
+    Server()
+
+    # connect to superior peer and start client routine
+    retrieve()
+
+def retrieve():
+    while True:
+        try:
+            for peer in peers:
+                client = Client(peer)
+            time.sleep(1)
+        except KeyboardInterrupt:
+            sys.exit(0)
+        except:
+            pass
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(0)

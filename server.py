@@ -1,10 +1,12 @@
-from mylib.constants import *
 import selectors
 import types
+import socket
+import threading
+import sys
 
 class Server:
+    data = {}
     def __init__(self, host, port) -> None:
-        self.host = host
         self.sel = selectors.DefaultSelector()
         # ...
         self.lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,28 +19,22 @@ class Server:
 
         serve_thread = threading.Thread(target=self.serve, daemon=True)
         serve_thread.start()
+        serve_thread.join()
 
     def serve(self):
         while True:
             try:
-                print(myp2p.peers)
-                print('waiting for event')
                 events = self.sel.select(timeout=None)
                 for key, mask in events:
                     if key.data is None:
                         self.accept_wrapper(key.fileobj)
                     else:
                         self.service_connection(key, mask)
-            except KeyboardInterrupt:
-                sys.exit(0)
             except:
                 pass
     
     def accept_wrapper(self, sock):
         conn, addr = sock.accept()  # Should be ready to read
-        if(addr[0] == self.host):
-            return
-        myp2p.add_peer(addr[0])
         print('accepted connection from', addr)
         conn.setblocking(False)
         data = types.SimpleNamespace(addr=addr, inb=b'', outb=b'')
@@ -51,7 +47,11 @@ class Server:
         if mask & selectors.EVENT_READ:
             recv_data = sock.recv(1024)  # Should be ready to read
             if recv_data:
-                data.outb += recv_data
+                self.data[sock.getpeername()[0]] = int(recv_data.decode())
+                if ( sock.getpeername()[0] == min(self.data, key=self.data.get) ):
+                    data.outb += b"true"
+                else:
+                    data.outb += b"false"
             else:
                 print('closing connection to', data.addr)
                 self.sel.unregister(sock)
@@ -61,3 +61,9 @@ class Server:
                 print('echoing', repr(data.outb), 'to', data.addr)
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]
+
+def main():
+    server = Server('0.0.0.0', 5054)
+
+if __name__ == "__main__":
+    main()

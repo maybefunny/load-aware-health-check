@@ -68,7 +68,7 @@ class Server:
                 data.outb = data.outb[sent:]
 
     def data_handler(self):
-        url = 'http://10.199.2.120:9090/api/v1/query?query=topk(1,%20avg%20by%20(instance)%20(100%20-%20rate(node_cpu_seconds_total{mode=%22idle%22}[30s])%20*%20100))'
+        url = 'http://10.199.2.120:9090/api/v1/query?query=bottomk(1,%20avg%20by%20(instance)%20(100%20-%20rate(node_cpu_seconds_total{mode=%22idle%22}[30s])%20*%20100))'
         while(True):
             r = requests.get(url)
             try:

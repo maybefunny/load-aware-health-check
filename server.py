@@ -21,8 +21,11 @@ class Server:
         self.sel.register(self.lsock, selectors.EVENT_READ, data=None)
 
         serve_thread = threading.Thread(target=self.serve, daemon=True)
+        data_thread = threading.Thread(target=self.data_handler, daemon=True)
         serve_thread.start()
+        data_thread.start()
         serve_thread.join()
+        data_thread.join()
 
     def serve(self):
         while True:

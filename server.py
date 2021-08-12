@@ -2,6 +2,9 @@ import selectors
 import types
 import socket
 import threading
+import requests
+import json
+import time
 import sys
 
 class Server:
@@ -47,8 +50,7 @@ class Server:
         if mask & selectors.EVENT_READ:
             recv_data = sock.recv(1024)  # Should be ready to read
             if recv_data:
-                self.data[sock.getpeername()[0]] = int(recv_data.decode())
-                if ( sock.getpeername()[0] == min(self.data, key=self.data.get) ):
+                if ( sock.getpeername()[0] in self.data ):
                     data.outb += b"true"
                 else:
                     data.outb += b"false"
@@ -61,6 +63,21 @@ class Server:
                 print('echoing', repr(data.outb), 'to', data.addr)
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]
+
+    def data_handler(self):
+        url = 'http://10.199.2.120:9090/api/v1/query?query=topk(1,%20avg%20by%20(instance)%20(100%20-%20rate(node_cpu_seconds_total{mode=%22idle%22}[30s])%20*%20100))'
+        while(True):
+            r = requests.get(url)
+            try:
+                if(r.status_code == 200):
+                    res = json.loads(r.text)
+                    newdata = []
+                    for data in res["data"]["result"]:
+                        newdata.append(data["metric"]["instance"][:-5])
+                    self.data = newdata
+            except:
+                pass
+            time.sleep(10)
 
 def main():
     server = Server('0.0.0.0', 5054)
